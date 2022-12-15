@@ -1,23 +1,45 @@
-import React from 'react';
-import {View, Picker, TextInput} from 'react-native';
+import React, {useState} from 'react';
+import {View, Text, TextInput, Button} from 'react-native';
 
-const App = () => {
-  const [selectedCrop, setSelectedCrop] = React.useState('corn');
-  const [cropQuantity, setCropQuantity] = React.useState(0);
+const RegisterForm = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSubmit = () => {
+    fetch('http://your-server.com/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: username,
+        password: password,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+      .then(response => response.json())
+      .then(response => {
+        // Handle successful registration
+        alert(response.message);
+      })
+      .catch(error => {
+        // Handle registration errors
+        alert('An error occurred while trying to register the user.');
+      });
+  };
 
   return (
     <View>
-      <Picker
-        selectedValue={selectedCrop}
-        onValueChange={(itemValue, itemIndex) => setSelectedCrop(itemValue)}>
-        <Picker.Item label="Corn" value="corn" />
-        <Picker.Item label="Wheat" value="wheat" />
-      </Picker>
+      <Text>Username:</Text>
+      <TextInput value={username} onChangeText={text => setUsername(text)} />
+      <Text>Password:</Text>
       <TextInput
-        value={cropQuantity}
-        onChangeText={text => setCropQuantity(text)}
-        keyboardType="numeric"
+        value={password}
+        onChangeText={text => setPassword(text)}
+        secureTextEntry={true}
       />
+      <Button onPress={handleSubmit} title="Register" />
     </View>
   );
 };
+
+export default RegisterForm;

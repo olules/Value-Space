@@ -2,13 +2,13 @@ import React, {useState} from 'react';
 import {View, Text, Picker, Image, TextInput, Button} from 'react-native';
 
 const MyApp = () => {
-  const [selectedItem, setSelectedItem] = useState(0);
-  const [selectedItemCount, setSelectedItemCount] = useState(0);
+  const [selectedItem, setSelectedItem] = useState(0);  
+  const [selectedItemDimension, setSelectedItemDimension] = useState(0);
   const [selectedItemImage, setSelectedItemImage] = useState(null);
 
   return (
     <View style={{flex: 1, padding: 16}}>
-      <Text>Number of selected items: {selectedItemCount}</Text>
+      <Text>Number of selected items: {selectedItemDimension}</Text>
       <Picker
         selectedValue={selectedItem}
         onValueChange={(itemValue, itemIndex) => setSelectedItem(itemValue)}
@@ -18,9 +18,9 @@ const MyApp = () => {
         <Picker.Item label="Bananas" value={3} />
       </Picker>
       <TextInput
-        placeholder="Enter number of selected items"
+        placeholder="Enter Dimension Length or Area of the Structure"
         keyboardType="numeric"
-        onChangeText={text => setSelectedItemCount(text)}
+        onChangeText={e => setSelectedItemDimension(e.target.value)}
       />
       <Button
         title="Take picture"

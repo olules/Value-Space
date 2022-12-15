@@ -3,14 +3,14 @@ import {PermissionsAndroid, View, Text, Button, Image, CameraRoll} from 'react-n
 
 // ...
 
-const Personal = () =>{
-   const [firstname, setFirstName] = useState('');
-   const [lastname, setLastName] = useState('');
-   const [age, setAge] = useState('');
-   const [telephone, setTelephone] = useState('');
-   const [image, setImage] = useState(null);
-   const [email, setEmail] = useState(null);
-   const [nin, setNin] = useState('');
+function Personal() {
+  const [firstname, setFirstName] = useState('');
+  const [lastname, setLastName] = useState('');
+  const [age, setAge] = useState('');
+  const [telephone, setTelephone] = useState('');
+  const [image, setImage] = useState(null);
+  const [email, setEmail] = useState(null);
+  const [nin, setNin] = useState('');
 
   async function launchCamera() {
     try {
@@ -19,7 +19,7 @@ const Personal = () =>{
         {
           title: 'Camera Permission',
           message: 'This app needs access to your camera',
-        },
+        }
       );
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
         // Launch the camera
@@ -52,59 +52,62 @@ const Personal = () =>{
       } else {
         // Handle permission denied
         console.log('Permission to access the camera was denied');
-       
+
       }
     } catch (err) {
       // Handle error
       console.error(err);
     }
   };
+  async function handleSaveImage(uri) {
+    try {
+      const saveResult = await CameraRoll.saveToCameraRoll(uri);
+      console.log('Image saved to camera roll', saveResult);
+    } catch (error) {
+      console.error('Error saving image to camera roll', error);
+    }
+  }
+
 
   return (
     <View>
       <View>
-        {image && <Image source={{uri: image.uri}} />}
+        {image && <Image source={{ uri: image.uri }} />}
         <Button title="Take PAP's Photo" onPress={launchCamera} />
-        /*
+
         {image && <Button title="Save image" onPress={handleSaveImage} />}
-        */
+
       </View>
       <TextInput
         placeholder="First Name"
         value={firstname}
         label="First name of PAP"
-        onChangeText={text => setFirstName(text)}
-      />
+        onChangeText={text => setFirstName(text)} />
       <TextInput
         placeholder="Last Name(s)"
         value={lastname}
         label="Last Name of PAP"
-        onChangeText={text => setLastName(text)}
-      />
+        onChangeText={text => setLastName(text)} />
       <TextInput
         placeholder="Telephone Contact"
         value={telephone}
         label="Telephone Contact of PAP"
-        onChangeText={e => setTelephone(e.target.value)}
-      />
+        onChangeText={e => setTelephone(e.target.value)} />
       <TextInput
         placeholder="Email"
         value={email}
         label="Email of PAP"
-        onChangeText={e => setEmail(e.target.value)}
-      />
+        onChangeText={e => setEmail(e.target.value)} />
       <TextInput
         placeholder="NIN"
         value={nin}
         label="NIN of PAP"
-        onChangeText={e => setNin(e.target.value)}
-      />
+        onChangeText={e => setNin(e.target.value)} />
       <TextInput
         placeholder="Age"
         value={age}
         label="Age of PAP"
-        onChangeText={e => setAge(e.target.value)}
-      />
+        onChangeText={e => setAge(e.target.value)} />
       <Button title="Submit" onPress={() => handleSubmit(name, email)} />
     </View>
   );
