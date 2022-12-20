@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {View, ScrollView, Text, TextInput} from 'react-native';
+import {View, ScrollView, Text, TextInput, StyleSheet} from 'react-native';
 import Personal from './Personal';
 import Crops from './Crops';
 
@@ -20,6 +20,7 @@ const App = () => {
 
   const handleSubmit = () => {
     // submit the form data here
+    onSubmit(formData);
   };
  /* const [crops, setCrops] = React.useState([]);
   const [cropCount, setCropCount] = React.useState(0); */
@@ -94,16 +95,16 @@ const App = () => {
             <TextInput
               placeholder="Enter number of crops"
               value={formData.cropCount}
+              name="cropCount"
               style={{flex: 1}}
               onChangeText={text => handleChange('cropCount', text)}
             />
 
             <Picker
               selectedValue={formData.crops}
-              style={{flex: 2}}
-              onValueChange={itemValue =>
-                handleChange([...formData.crops, itemValue])
-              }>
+              name="crops"
+              style={styles.picker1}
+              onValueChange={itemValue => handleChange([...crops, itemValue])}>
               <Picker.Item label="Avocado" value="avocado" />
               <Picker.Item label="Mango" value="mango" />
               <Picker.Item label="Pineapple" value="pineapple" />
@@ -111,7 +112,7 @@ const App = () => {
             <Button
               style={{flex: 3}}
               title="Add crop"
-              onPress={() => handleChange([...formData.crops, 'new crop'])}
+              onPress={() => handleChange([...crops, 'new crop'])}
             />
           </View>
           <Text>
@@ -136,9 +137,10 @@ const App = () => {
 
             <Picker
               selectedValue={formData.trees}
-              style={{flex: 2}}
+              name="trees"
+              style={styles.picker1}
               onValueChange={itemValue =>
-                handleChange([...formData.trees, itemValue])
+                handleChange(['trees', itemValue])
               }>
               <Picker.Item label="Avocado" value="avocado" />
               <Picker.Item label="Mango" value="mango" />
@@ -147,7 +149,7 @@ const App = () => {
             <Button
               style={{flex: 3}}
               title="Add tree"
-              onPress={() => handleChange([...formData.trees, 'new tree'])}
+              onPress={() => handleChange([trees, 'new tree'])}
             />
           </View>
           <Text>
@@ -160,10 +162,63 @@ const App = () => {
           <Button title="Submit" onPress={handleSubmit} />
         </View>
       )}
+      {currentStep === 4 && (
+        <View style={styles.container}>
+          <View style={{flex: 1, padding: 16}}>
+            <View style={{flexDirection: 'row'}}>
+              <TextInput
+                placeholder="Enter Dimensions of the structure"
+                value={formData.dimension}
+                style={{flex: 1}}
+                name="dimension"
+                onChangeText={text => handleChange('dimension', text)}
+              />
+              <Text>Number of selected items: {selectedItemDimension}</Text>
+              <Picker
+                selectedValue={formData.selectedItem}
+                onValueChange={(itemValue, itemIndex) =>
+                 setSelectedItem(itemValue)
+                }
+                itemStyle={{height: 50}}>
+                <Picker.Item label="Mangoes" value={1} />
+                <Picker.Item label="Apples" value={2} />
+                <Picker.Item label="Bananas" value={3} />
+              </Picker>
+              <TextInput
+                placeholder="Enter Dimension Length or Area of the Structure"
+                keyboardType="numeric"
+                onChangeText={e => setSelectedItemDimension(e.target.value)}
+              />
+              <Button
+                title="Take picture"
+                onPress={() => {
+                  // Take a picture using the device's camera and set it as the selected item image
+                  // Note: This is just a placeholder and may not be implemented properly
+                  setSelectedItemImage('https://picsum.photos/200/300');
+                }}
+              />
+              {selectedItemImage && (
+                <Image
+                  source={{uri: selectedItemImage}}
+                  style={{width: 200, height: 300}}
+                />
+              )}
+
+              <Text>
+                {formData.trees.map(tree => (
+                  <Text key={tree}>
+                    {tree} {formData.treeCount}
+                  </Text>
+                ))}
+              </Text>
+            </View>{' '}
+          </View>
+        </View>
+      )}
     </ScrollView>
   );
 };
-const styles = {
+const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fff',
     padding: 20,
@@ -183,4 +238,14 @@ const styles = {
     padding: 10,
     fontSize: 16,
   },
-};
+  picker1: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    margin: 10,
+    padding: 10,
+    fontSize: 16,
+    flex: 2
+  },
+});
+;

@@ -1,94 +1,227 @@
-import React, {useState, useEffect} from 'react';
-import {View, TextInput, Picker, Button, AsyncStorage} from 'react-native';
+import React, {useState} from 'react';
+import {View, Text, Picker, TextInput, Button, Image} from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 
-import React from 'react';
-import {View, TextInput, Picker, Text, Button} from 'react-native';
+const CropForm = () => {
+  const [crop, setCrop] = useState('');
+  const [pap, setPap] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [description, setDescription] = useState('');
+  const [image, setImage] = useState(null);
+  const [page, setPage] = useState('form'); // add a page state to track which page to display
+  const [formData, setFormData] = useState({}); // add a state to store the form data
 
-const Crops = () => {
-  const [crops, setCrops] = React.useState([]);
-  const [cropCount, setCropCount] = React.useState(0);
-  /*
-  useEffect(() => {
-    // Fetch the data from the Django database.
-     fetch('http://example.com/api/items')
-      .then(response => response.json())
-      .then(data => {
-        setChoices(data);
-      })
-      .catch(error => {
-        // Handle any errors that occurred during the fetch.
-      });
-  }, []); 
-  });
-  const handleSubmit = async () => {
+  // Fetch the list of crops from Django API
+  const fetchcrops = async () => {
     try {
-      await AsyncStorage.setItem('formData', value);
-      alert(`Saved: ${value}`);
+      const response = await fetch('http://127.0.0.1:8000/api/crops');
+      const data = await response.json();
+      return data;
     } catch (error) {
-      alert(`Error saving data: ${error}`);
+      console.error(error);
     }
-  };*/
-   const handleSubmit = event => {
-     event.preventDefault();
-     // Do something with the form data (e.g. send it to an API)
-   };
+  };
+  const fetchPaps = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/paps');
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleSelectcrop = itemValue => {
+    setCrop(itemValue);
+  };
+
+  const handleSelectPap = itemValue => {
+    setPap(itemValue);
+  };
+
+  const handleChangeQuantity = text => {
+    setQuantity(text);
+  };
+
+  const handleChangeDescription = text => {
+    setDescription(text);
+  };
+
+  const handleSelectImage = () => {
+    // Use the built-in ImagePicker component to select an image from the device's library or camera
+    ImagePicker.showImagePicker({}, response => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.error) {
+        console.log('ImagePicker Error: ', response.error);
+      } else {
+        const updatedFormData = [...formData];
+        updatedFormData[index].image = response.uri;
+        setFormData(updatedFormData);
+      }
+    });
+  };
+
+  const handleSubmit = () => {
+    // Check if there is an internet connection
+    if (navigator.onLine) {
+      // Submit the form data to the Django API
+      fetch('http://127.0.0.1:8000/api/crops/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          crop,
+          quantity,
+          description,
+          image,
+          pap,
+        }),
+      });
+
+      // Store the form data in the formData state
+      setFormData({
+        crop,
+        pap,
+        quantity,
+        description,
+        image,
+      });
+
+      // Navigate to the confirmation page
+      setPage('confirmation');
+    } else {
+      // If there is no internet connection, store the form data in SQLite
+      SQLite.openDatabase(
+        {
+          name: 'formData.db',
+          location: 'default',
+        },
+        () => {
+          console.log('SQLite database opened');
+        },
+        error => {
+          console.log(error);
+        },
+      );
+
+      // Insert the form data into the SQLite database
+      SQLite.executeSql(
+        'INSERT INTO formData (crop, pap, quantity, description, image) VALUES (?, ?, ?, ?, ?)',
+        [crop, pap, quantity, description, image],
+        () => {
+          console.log('Form data inserted into SQLite database');
+        },
+        error => {
+          console.log(error);
+        },
+      );
+
+      // Navigate to the confirmation page
+      setPage('confirmation');
+    }
+  };
+  // Add a function to check the internet connection status
+  const checkConnection = async () => {
+    // Get the internet connection status
+    const connectionInfo = await NetInfo.fetch();
+
+    // If there is an internet connection
+    if (connectionInfo.isConnected) {
+      console.log('Internet connection available');
+
+      // Open the SQLite database
+      SQLite.openDatabase(
+        {
+          name: 'formData.db',
+          location: 'default',
+        },
+        () => {
+          console.log('SQLite database opened');
+        },
+        error => {
+          console.log(error);
+        },
+      );
+
+      // Retrieve the stored form data from the SQLite database
+      SQLite.executeSql(
+        'SELECT * FROM formData',
+        [],
+        (_, {rows}) => {
+          console.log(rows);
+          for (let i = 0; i < rows.length; i++) {
+            // Submit the form data to the Django API
+            fetch('http://127.0.0.1:8000/api/crops/', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                crop: rows.item(i).crop,
+                quantity: rows.item(i).quantity,
+                description: rows.item(i).description,
+                image: rows.item(i).image,
+                pap: rows.item(i).pap,
+              }),
+            });
+          }
+        },
+        error => {
+          console.log(error);
+        },
+      );
+    } else {
+      console.log('No internet connection');
+    }
+  };
+  // Call the checkConnection function every 5 minutes
+  setInterval(checkConnection, 5 * 60 * 1000);
 
   return (
-    <View style={styles.container}>
-      <View style={{flexDirection: 'row'}}>
-        <TextInput
-          placeholder="Enter number of crops"
-          value={cropCount}
-          style={{flex: 1}}
-          onChangeText={e => setCropCount(e.target.value)}
-        />
-
-        <Picker
-          selectedValue={crops}
-          style={{flex: 2}}
-          onValueChange={itemValue => setCrops([...crops, itemValue])}>
-          <Picker.Item label="Avocado" value="avocado" />
-          <Picker.Item label="Mango" value="mango" />
-          <Picker.Item label="Pineapple" value="pineapple" />
-        </Picker>
-        <Button
-          style={{flex: 3}}
-          title="Add crop"
-          onPress={() => setCrops([...crops, 'new crop'])}
-        />
-      </View>
-      <Text>
-        {crops.map(crop => (
-          <Text key={crop}>
-            {crop} {cropCount}
-          </Text>
-        ))}
-      </Text>
-
-      <Button title="Submit" onPress={handleSubmit} />
+    <View>
+      {page === 'form' ? (
+        <>
+          <Picker selectedValue={crop} onValueChange={handleSelectcrop}>
+            {fetchcrops().map(item => (
+              <Picker.Item
+                key={item.value}
+                label={item.label}
+                value={item.value}
+              />
+            ))}
+          </Picker>
+          <Picker selectedValue={pap} onValueChange={handleSelectPap}>
+            {fetchPaps().map(item => (
+              <Picker.Item
+                key={item.value}
+                label={item.label}
+                value={item.value}
+              />
+            ))}
+          </Picker>
+          <TextInput
+            value={quantity}
+            onChangeText={handleChangeQuantity}
+            placeholder="Quantity"
+          />
+          <TextInput
+            value={description}
+            onChangeText={handleChangeDescription}
+            placeholder="Description"
+          />
+          <Button onPress={handleSelectImage} title="Select Image" />
+          {image && (
+            <Image source={{uri: image}} style={{width: 200, height: 200}} />
+          )}
+          <Button onPress={handleSubmit} title="Submit" />
+        </>
+      ) : (
+        <ConfirmationPage {...formData} />
+      )}
     </View>
   );
 };
-const styles = {
-  container: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 2,
-    marginBottom: 20,
-  },
-  input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    margin: 10,
-    padding: 10,
-    fontSize: 16,
-  },
-};
 
-export default Crops;
+export default CropForm;

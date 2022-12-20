@@ -1,94 +1,100 @@
-import React, {useState, useEffect} from 'react';
-import {View, TextInput, Picker, Button, AsyncStorage} from 'react-native';
+import React, {useState} from 'react';
+import {View, Text, Picker, TextInput, Button, Image} from 'react-native';
 
-import React from 'react';
-import {View, TextInput, Picker, Text, Button} from 'react-native';
+const TreeForm = () => {
+  const [tree, setTree] = useState('');
+  const [pap, setPap] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [description, setDescription] = useState('');
+  const [image, setImage] = useState(null);
 
-const Trees = () => {
-  const [trees, setTrees] = React.useState([]);
-  const [treeCount, setTreeCount] = React.useState(0);
-  /*
-  useEffect(() => {
-    // Fetch the data from the Django database.
-     fetch('http://example.com/api/items')
-      .then(response => response.json())
-      .then(data => {
-        setChoices(data);
-      })
-      .catch(error => {
-        // Handle any errors that occurred during the fetch.
-      });
-  }, []); 
-  });
-  const handleSubmit = async () => {
+  // Fetch the list of trees from Django API
+  const fetchTrees = async () => {
     try {
-      await AsyncStorage.setItem('formData', value);
-      alert(`Saved: ${value}`);
+      const response = await fetch(
+        'http://127.0.0.1:8000/api/trees',
+      );
+      const data = await response.json();
+      return data;
     } catch (error) {
-      alert(`Error saving data: ${error}`);
+      console.error(error);
     }
-  };*/
-   const handleSubmit = event => {
-     event.preventDefault();
-     // Do something with the form data (e.g. send it to an API)
+  };
+
+  const handleSelectTree = itemValue => {
+    setTree(itemValue);
+  };
+
+   const handleSelectPap = itemValue => {
+     setPap(itemValue);
    };
 
+  const handleChangeQuantity = text => {
+    setQuantity(text);
+  };
+
+  const handleChangeDescription = text => {
+    setDescription(text);
+  };
+
+  const handleSelectImage = () => {
+    // Use the built-in ImagePicker component to select an image from the device's library or camera
+    ImagePicker.showImagePicker({}, response => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.error) {
+        console.log('ImagePicker Error: ', response.error);
+      } else {
+        setImage(response.uri);
+      }
+    });
+  };
+
+  const handleSubmit = () => {
+    // Submit the form data to the Django API
+    fetch('http://127.0.0.1:8000/api/trees/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        tree,
+        quantity,
+        description,
+        image,
+        pap,
+      }),
+    });
+  };
+
   return (
-    <View style={styles.container}>
-      <View style={{flexDirection: 'row'}}>
-        <TextInput
-          placeholder="Enter number of trees"
-          value={treeCount}
-          style={{flex: 1}}
-          onChangeText={e => setTreeCount(e.target.value)}
-        />
-
-        <Picker
-          selectedValue={trees}
-          style={{flex: 2}}
-          onValueChange={itemValue => setTrees([...trees, itemValue])}>
-          <Picker.Item label="Avocado" value="avocado" />
-          <Picker.Item label="Mango" value="mango" />
-          <Picker.Item label="Pineapple" value="pineapple" />
-        </Picker>
-        <Button
-          style={{flex: 3}}
-          title="Add tree"
-          onPress={() => setTrees([...trees, 'new tree'])}
-        />
-      </View>
-      <Text>
-        {trees.map(tree => (
-          <Text key={tree}>
-            {tree} {treeCount}
-          </Text>
+    <View>
+      <Picker selectedValue={tree} onValueChange={handleSelectTree}>
+        {fetchTrees().map(item => (
+          <Picker.Item key={item.value} label={item.label} value={item.value} />
         ))}
-      </Text>
-
-      <Button title="Submit" onPress={handleSubmit} />
+      </Picker>
+       <Picker selectedValue={pap} onValueChange={handleSelectPap}>
+        {fetchPaps().map(item => (
+          <Picker.Item key={item.value} label={item.label} value={item.value} />
+        ))}
+      </Picker>
+      <TextInput
+        value={quantity}
+        onChangeText={handleChangeQuantity}
+        placeholder="Quantity"
+      />
+      <TextInput
+        value={description}
+        onChangeText={handleChangeDescription}
+        placeholder="Description"
+      />
+      <Button onPress={handleSelectImage} title="Select Image" />
+      {image && (
+        <Image source={{uri: image}} style={{width: 200, height: 200}} />
+      )}
+      <Button onPress={handleSubmit} title="Submit" />
     </View>
   );
 };
-const styles = {
-  container: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 2,
-    marginBottom: 20,
-  },
-  input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    margin: 10,
-    padding: 10,
-    fontSize: 16,
-  },
-};
-
-export default Trees;
+export default TreeForm;

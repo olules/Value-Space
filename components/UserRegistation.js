@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Picker, TextInput, Button, Image, ImageEditor } from 'react-native';
 
-const MyApp = () => {
+const UserREgistratiom = () => {
   const [selectedItem, setSelectedItem] = useState('mangoes');
   const [quantity, setQuantity] = useState('');
   const [image, setImage] = useState(null);
